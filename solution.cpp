@@ -1,6 +1,6 @@
-/* ----------------------------------------------------------------------------
+* ----------------------------------------------------------------------------
  * Copyright &copy; 2015 Ben Blazak <bblazak@fullerton.edu>
- *                  2015 TODO(your name) <TODO(your email)>
+ *                  2015 Randy Tanizawa <rtanizawa@csu.fullerton.edu>
  * Released under the [MIT License] (http://opensource.org/licenses/MIT)
  * ------------------------------------------------------------------------- */
 
@@ -22,113 +22,159 @@ using std::string;
 using std::ifstream;
 using std::ofstream;
 
-/**
- * Find the maximum unsigned integer in `infilename`.
- *
- * Arguments:
- * - `infilename`: A string representing the file path to open.
- *     - Note: Since the string will not be changed, we declare it `const`.
- *       Since strings are objects (and therefore larger than fundamental
- *       types), we avoid copying it by passing it by reference.
- *
- * Returns:
- * - The maximum integer, or `-1` on error.
- *     - Note: It would be better style in C++ to throw an exception, but we
- *       haven't learned about those yet.
- */
+ifstream infilename;
+ofstream outfilename;
+
+int total;
+int min_num = 65535;
+int max_num = 1;
+
 int find_max(const string& infilename);
 
-/**
- * Mark all prime indices in `primes` as `true` and all others as `false` using
- * the Sieve of Eratosthenes algorithm.
- *
- * Arguments:
- * - `size`: The size of (the number of elements in) the array.
- * - `primes`: An array of boolean values.
- *
- * Notes:
- * - The number `2` is the smallest prime.
- * - When arrays are passed to functions, they decay into pointers (even though
- *   arrays and pointers are not the same thing).  Thus what this function is
- *   actually receiving is a pointer to the first element of the array `primes`
- *   in `main()` (it doesn't make much difference for how we're using it in
- *   this function, but the distinction is important).  This pointer is passed
- *   by value, but the data inside the array is not passed at all: we access it
- *   through the pointer.
- * - It might be better to return the array from the function rather than pass
- *   the array and modify it, but the syntax is relatively uncommon, and might
- *   be confusing.
- */
-void sieve(const int size, bool primes[]);
+void sieve(const int size_of, bool primes[]);
 
-/**
- * Read numbers from `infilename`, and if they are prime, output them to
- * `outfilename`, separated by newlines.
- *
- * Arguments:
- * - `size`: The size of (the number of elements in) the array.
- * - `primes`: An array of boolean values, with each element set to `true` if
- *   its index is prime, and `false` otherwise.
- * - `infilename`: A string representing the file path to read from.
- * - `outfilename`: A string representing the file path to write to.
- *
- * Returns:
- * - 0 on success, or -1 on error.
- */
-int write_primes( const int size,
+int write_primes( const int size_of,
                   bool primes[],
                   const string& infilename,
                   const string& outfilename );
 
-/**
- * Read numbers from `infilename`, and if they are composite, output them to
- * `outfilename`, separated by newlines.
- *
- * Arguments:
- * - `size`: The size of (the number of elements in) the array.
- * - `primes`: An array of boolean values, with each element set to `true` if
- *   its index is prime, and `false` otherwise.
- * - `infilename`: A string representing the file path to read from.
- * - `outfilename`: A string representing the file path to write to.
- *
- * Returns:
- * - 0 on success, or -1 on error.
- */
-int write_composites( const int size,
+
+
+int write_composites( const int size_of,
                       bool primes[],
                       const string& infilename,
                       const string& outfilename );
 
+
+
 // ----------------------------------------------------------------------------
 
 int main() {
-    int max = find_max("input.txt");
-    if (max == -1) {
-        cout << "ERROR in `find_max()`" << endl;
-        return 1;  // error
+
+    infilename.open("input.txt");
+
+    int MAX = find_max(infilename);
+    if(MAX == -1)
+    {
+        cout << "Error in find_max()." << endl;
+        return 1;
     }
 
-    bool primes[max+1];
-    sieve(max+1, primes);
+    bool primes[max_num + 1];
+    sieve(max_num + 1, primes);
 
-    int ret;  // for storing return values, to check for error codes
-    //
-    ret = write_primes(max+1, primes, "input.txt", "primes.txt");
-    if (ret == -1) {
-        cout << "ERROR in `write_primes()`" << endl;
-        return 1;  // error
-    }
-    //
-    ret = write_composites(max+1, primes, "input.txt", "composites.txt");
-    if (ret == -1) {
-        cout << "ERROR in `write_composites()`" << endl;
-        return 1;  // error
+    int ret_value;
+    ret_value = write_primes(total,primes,infilename,outfilename);
+    if(ret_value == -1)
+    {
+        cout << "Error in write_primes()." << endl;
+        return 1;
     }
 
-    return 0;  // success
+    int ret;
+    ret = write_composites(total,primes,infilename,outfilename);
+     if(ret_value == -1)
+    {
+        cout << "Error in write_composites()." << endl;
+        return 1;
+    }
+
+    cout << "Files successfully created and sorted." << endl;
+
+    return 0;
 }
 
 // ----------------------------------------------------------------------------
 
-// TODO: write prototyped functions
+int find_max(ifstream& infilename)
+{
+    infilename.clear();
+    infilename.seekg(0, infilename.beg);
+    if(infilename){
+    int number;
+    total = 0;
 
+    while(infilename >> number)                      // Read through file from beginning. If the number is larger than
+    {                                                // the max_number set at 1, replace it to be the max_number.
+        total++;                                     // The min_number is to eliminate any numbers larger than the limit
+        if(number > max_num)                         // set at 65535.
+            max_num = number;
+        if(number < min_num)
+            min_num = number;
+    }
+    return max_num;
+    }
+    else
+        return -1;
+}
+
+void sieve(const int size_of, bool primes[])
+{
+    for(int TRUE = 0; TRUE < max_num + 1; TRUE++)     // Set all elements to true
+    {
+        primes[TRUE] = 1;
+    }
+
+    int x = 2;                                        // Using "x" as the multiplicand.
+    for(x; x < ((max_num + 1)/2);)                    // "x" grows by 1 as long as it is less than half the max number.
+    {
+        for(int i = 2; i * x < (max_num + 1); i++)
+        {
+            primes[x * i] = 0;                        // Any numbers that go into the brackets are set to 0
+        }                                             // and are therefore not prime
+        ++x;
+    }
+
+}
+
+int write_primes(const int size_of,
+                 bool primes[],
+                 const string& infilename,
+                 const string& outfilename)
+{
+    infilename.clear();                               // The file has already been read and needs the read
+    infilename.seekg(0, infilename.beg);              // position to be set back to the beginning.
+
+    outfilename.open("primes.txt");
+    if(outfilename.is_open()){
+    int contents;
+
+    while (infilename >> contents)                    // Search through the file again and prints all numbers
+    {                                                 // that match with the prime array's true values
+        for(int i = 2; i < (max_num + 1); i++)
+        {
+            if(primes[i] == 1 && contents == i)
+            {
+                outfilename << contents << endl;
+    }   }   }
+        return 0;
+    }
+    else
+        return -1;
+}
+
+int write_composites( const int size_of,
+                      bool primes[],
+                      const string& infilename,
+                      const string& outfilename )
+{
+    infilename.clear();                               // The file has already been read and needs the read
+    infilename.seekg(0, infilename.beg);              // position to be set back to the beginning.
+
+    outfilename.open("composites.txt");
+    if(outfilename.is_open()){
+    int contents;
+
+    while (infilename >> contents)                    // Search through the file again and prints all numbers
+    {                                                 // that match with the prime array's false values.
+        for(int i = 2; i < (max_num + 1); i++)
+        {
+            if(primes[i] == 0 && contents == i)
+            {
+                outfilename << contents << endl;
+    }   }   }
+        return 0;
+    }
+    else
+        return -1;
+}
